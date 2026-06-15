@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator</title>
+
+<style>
+body{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    background:#111827;
+    font-family:Arial;
+}
+
+.calculator{
+    width:320px;
+    background:#1f2937;
+    padding:20px;
+    border-radius:15px;
+}
+
+#display{
+    width:100%;
+    height:60px;
+    font-size:30px;
+    text-align:right;
+    margin-bottom:15px;
+    border:none;
+    outline:none;
+    padding-right:10px;
+}
+
+.buttons{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+}
+
+button{
+    height:60px;
+    font-size:22px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.operator{
+    background:rgb(24, 17, 4);
+}
+
+.equal{
+    background:rgb(91, 87, 64);
+}
+
+.clear{
+    background:red;
+    color:white;
+}
+</style>
+
+<!-- ===================== ENHANCEMENTS (added on top of the code above) ===================== -->
+<style>
+  html, body{
+    overflow: hidden;
+    height: 100%;
+  }
+
+  /* ---------- Ambient background orbs ---------- */
+  .bg-orb{
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: .45;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .bg-orb--1{
+    width: 380px; height: 380px;
+    background: #242424;
+    top: -120px; left: -120px;
+    animation: orbFloat1 20s ease-in-out infinite alternate;
+  }
+  .bg-orb--2{
+    width: 340px; height: 340px;
+    background: #2a2c2c;
+    bottom: -100px; right: -100px;
+    animation: orbFloat2 24s ease-in-out infinite alternate;
+  }
+  .bg-orb--3{
+    width: 300px; height: 300px;
+    background: #2a2c2c;
+    top: 55%; right: 8%;
+    animation: orbFloat3 18s ease-in-out infinite alternate;
+  }
+  @keyframes orbFloat1{ to{ transform: translate(70px,80px) scale(1.15); } }
+  @keyframes orbFloat2{ to{ transform: translate(-60px,-60px) scale(1.1); } }
+  @keyframes orbFloat3{ to{ transform: translate(-50px,40px) scale(.9); } }
+
+  /* ---------- Title ---------- */
+  .calc-title{
+    position: fixed;
+    top: 6%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-family: Arial, sans-serif;
+    font-weight: 800;
+    font-size: 1.9rem;
+    letter-spacing: .06em;
+    text-align: center;
+    background: linear-gradient(90deg,#25b9e6,#25b9e6,#25b9e6,#25b9e6,#25b9e6,#25b9e6);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 6s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes shimmer{ to{ background-position: 300% 0; } }
+  @media (max-height: 680px){ .calc-title{ display:none; } }
+
+  /* ---------- Calculator card ---------- */
+  .calculator{
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: cardIn .6s ease forwards,
+               cardFloat 6s ease-in-out 1s infinite;
+  }
+  @keyframes cardIn{
+    from{ opacity:0; transform: scale(.92) translateY(24px); }
+    to{ opacity:1; transform: scale(1) translateY(0); }
+  }
+  @keyframes cardFloat{
+    0%, 100%{ transform: translateY(0); }
+    50%{ transform: translateY(-8px); }
+  }
+  .calculator::before{
+    content:"";
+    position: absolute;
+    inset: -3px;
+    border-radius: 18px;
+    background: conic-gradient(from 0deg, #28dcdf, #28dcdf, #27c0db, #19b7f5, #24ace2, #14bad7);
+   
+    z-index: -1;
+    filter: blur(10px);
+    opacity: .8;
+    animation: rotateGlow 6s linear infinite;
+  }
+  @keyframes rotateGlow{ to{ transform: rotate(360deg); } }
+
+  /* ---------- Display ---------- */
+  #display{
+    background: linear-gradient(135deg,#0f172a,#1e293b);
+    color: #f8fafc;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 10px rgba(19, 18, 20, 0.55);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,.4), 0 0 0 rgba(167,139,246,0);
+  }
+  #display.pulse{
+    animation: displayPulse .45s ease;
+  }
+  @keyframes displayPulse{
+    0%{   box-shadow: inset 0 2px 8px rgba(221, 23, 23, 0.4), 0 0 0 rgba(167,139,246,0); }
+    40%{  box-shadow: inset 0 2px 8px rgba(0,0,0,.4), 0 0 26px 4px rgba(44, 44, 46, 0.7); }
+    100%{ box-shadow: inset 0 2px 8px rgba(0,0,0,.4), 0 0 0 rgba(167,139,246,0); }
+  }
+
+  /* ---------- Buttons: base ---------- */
+  .buttons button{
+    position: relative;
+    color: #fff;
+    font-family: inherit;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0,0,0,.35);
+    transition: transform .18s cubic-bezier(.34,1.56,.64,1), filter .2s ease;
+    animation: popIn .5s cubic-bezier(.34,1.56,.64,1) backwards;
+  }
+  @keyframes popIn{
+    from{ opacity:0; transform: scale(.5) translateY(15px); }
+    to{ opacity:1; transform: scale(1) translateY(0); }
+  }
+  /* staggered entrance, row by row */
+  .buttons button:nth-child(-n+4){ animation-delay: .05s; }
+  .buttons button:nth-child(n+5):nth-child(-n+8){ animation-delay: .1s; }
+  .buttons button:nth-child(n+9):nth-child(-n+12){ animation-delay: .15s; }
+  .buttons button:nth-child(n+13):nth-child(-n+16){ animation-delay: .2s; }
+  .buttons button:nth-child(n+17){ animation-delay: .25s; }
+
+  .buttons button:active{ transform: translateY(2px) scale(.95); filter: brightness(.95); }
+
+  @media (pointer: fine){
+    body, button{ cursor: none; }
+    .buttons button:hover{ transform: translateY(-4px) scale(1.04); filter: brightness(1.12); }
+  }
+
+  /* ---------- Colorful number keys (rainbow by digit) ---------- */
+  .buttons button:nth-child(5){  background: linear-gradient(145deg,hsl(0, 0%, 8%),hsl(144, 11%, 9%)); box-shadow:0 6px 18px hsla(252,80%,55%,.45); } /* 7 */
+  .buttons button:nth-child(6){  background: linear-gradient(145deg,hsl(120, 3%, 8%),hsl(120, 2%, 8%)); box-shadow:0 6px 18px hsla(288,80%,55%,.45); } /* 8 */
+  .buttons button:nth-child(7){  background: linear-gradient(145deg,hsl(60, 2%, 9%),hsl(120, 3%, 7%)); box-shadow:0 6px 18px hsla(324,80%,55%,.45); } /* 9 */
+  .buttons button:nth-child(9){  background: linear-gradient(145deg,hsl(120, 4%, 9%),hsl(180, 5%, 4%)); box-shadow:0 6px 18px hsla(144,70%,45%,.45); } /* 4 */
+  .buttons button:nth-child(10){ background: linear-gradient(145deg,hsl(180, 3%, 7%),hsl(180, 2%, 9%)); box-shadow:0 6px 18px hsla(180,75%,45%,.45); } /* 5 */
+  .buttons button:nth-child(11){ background: linear-gradient(145deg,hsl(150, 3%, 11%),hsl(120, 1%, 14%)); box-shadow:0 6px 18px hsla(216,80%,52%,.45); } /* 6 */
+  .buttons button:nth-child(13){ background: linear-gradient(145deg,hsl(120, 3%, 12%), hsl(0, 0%, 4%));  box-shadow:0 6px 18px hsla(36,90%,50%,.45); }  /* 1 */
+  .buttons button:nth-child(14){ background: linear-gradient(145deg,hsl(120, 4%, 11%), hsl(120, 3%, 6%));  box-shadow:0 6px 18px hsla(72,75%,45%,.45); }  /* 2 */
+  .buttons button:nth-child(15){ background: linear-gradient(145deg,hsl(0, 0%, 5%),hsl(120, 6%, 7%)); box-shadow:0 6px 18px hsla(108,70%,45%,.45); } /* 3 */
+  .buttons button:nth-child(17){ background: linear-gradient(145deg,hsl(120, 2%, 11%),  hsl(120, 8%, 10%));   box-shadow:0 6px 18px hsla(0,80%,55%,.45); }   /* 0 */
+
+  /* ---------- Secondary keys: backspace, %, decimal point ---------- */
+  .buttons button:nth-child(2),
+  .buttons button:nth-child(3),
+  .buttons button:nth-child(18){
+    background: linear-gradient(145deg,#587d02,#587d02);
+    box-shadow: 0 6px 18px rgba(236, 8, 12, 0.4);
+  }
+
+  /* ---------- Operator / equal / clear ---------- */
+  .buttons button.operator{
+    background: linear-gradient(145deg,#13a8c0,#18ecd4);
+    color: #1f2937;
+    box-shadow: 0 6px 18px rgba(251, 8, 8, 0.45);
+  }
+
+  .buttons button.equal{
+    background: linear-gradient(145deg,hsla(192, 59%, 91%, 0.796),#f4fdfe);
+    color: #1f2937;
+    box-shadow: 0 6px 18px rgba(250,204,21,.5);
+  }
+  .buttons button.equal::after{
+    content:"";
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    pointer-events: none;
+    animation: equalPulse 2.2s ease-in-out 1.5s infinite;
+  }
+  @keyframes equalPulse{
+    0%, 100%{ box-shadow: 0 0 0 0 rgba(250,204,21,.6); }
+    50%{      box-shadow: 0 0 18px 6px rgba(250,204,21,.6); }
+  }
+
+  .buttons button.clear{
+    background: linear-gradient(145deg,#fca5a5,#ef4444);
+    box-shadow: 0 6px 18px rgba(239,68,68,.45);
+  }
+  @keyframes shake{
+    0%, 100%{ transform: translateX(0) translateY(-4px); }
+    25%{ transform: translateX(-4px) translateY(-4px); }
+    75%{ transform: translateX(4px) translateY(-4px); }
+  }
+  @media (pointer: fine){
+    .buttons button.clear:hover{ animation: shake .35s ease; }
+  }
+
+  /* ---------- Click ripple ---------- */
+  .ripple{
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,.5);
+    scale: 0;
+    pointer-events: none;
+    animation: rippleAnim .6s ease-out forwards;
+  }
+  @keyframes rippleAnim{ to{ scale: 2.6; opacity: 0; } }
+
+  /* ---------- Custom cursor ---------- */
+  .cursor-dot, .cursor-ring{ display:none; }
+  @media (pointer: fine){
+    .cursor-dot, .cursor-ring{
+      display: block;
+      position: fixed;
+      top: 0; left: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .cursor-dot{
+      width: 8px; height: 8px;
+      background: #facc15;
+      transition: opacity .2s ease;
+    }
+    .cursor-ring{
+      width: 32px; height: 32px;
+      border: 1.5px solid #a78bfa;
+      transition: width .25s ease, height .25s ease, background .25s ease, border-color .25s ease;
+    }
+    .cursor-ring.is-active{
+      width: 56px; height: 56px;
+      background: rgba(167,139,246,.16);
+      border-color: #facc15;
+    }
+    .cursor-dot.is-hidden{ opacity: 0; }
+  }
+
+  /* ---------- Reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="bg-orb bg-orb--1"></div>
+<div class="bg-orb bg-orb--2"></div>
+<div class="bg-orb bg-orb--3"></div>
+<h1 class="calc-title">✨ Calculator ✨</h1>
+
+<div class="calculator">
+
+    <input type="text" id="display" readonly>
+
+    <div class="buttons">
+
+        <button class="clear" onclick="clearDisplay()">AC</button>
+        <button onclick="deleteLast()">⌫</button>
+        <button onclick="append('%')">%</button>
+        <button class="operator" onclick="append('/')">÷</button>
+
+        <button onclick="append('7')">7</button>
+        <button onclick="append('8')">8</button>
+        <button onclick="append('9')">9</button>
+        <button class="operator" onclick="append('*')">×</button>
+
+        <button onclick="append('4')">4</button>
+        <button onclick="append('5')">5</button>
+        <button onclick="append('6')">6</button>
+        <button class="operator" onclick="append('-')">−</button>
+
+        <button onclick="append('1')">1</button>
+        <button onclick="append('2')">2</button>
+        <button onclick="append('3')">3</button>
+        <button class="operator" onclick="append('+')">+</button>
+
+        <button onclick="append('0')">0</button>
+        <button onclick="append('.')">.</button>
+        <button class="equal" onclick="calculate()">=</button>
+
+    </div>
+</div>
+
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<script>
+
+let display = document.getElementById("display");
+
+function append(value){
+    display.value += value;
+}
+
+function clearDisplay(){
+    display.value = "";
+}
+
+function deleteLast(){
+    display.value = display.value.slice(0,-1);
+}
+
+function calculate(){
+    try{
+        display.value = eval(display.value);
+    }
+    catch{
+        display.value = "Error";
+    }
+}
+
+</script>
+
+<!-- ===================== ENHANCEMENT SCRIPT (added on top of the code above) ===================== -->
+<script>
+  // ---- Click ripple on every button ----
+  document.querySelectorAll('.buttons button').forEach((btn) => {
+    btn.addEventListener('pointerdown', (e) => {
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      ripple.style.width = size + 'px';
+      ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      btn.appendChild(ripple);
+      ripple.addEventListener('animationend', () => ripple.remove());
+    });
+  });
+
+  // ---- Display glow pulse whenever a key is pressed ----
+  document.querySelector('.buttons').addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON') {
+      display.classList.remove('pulse');
+      requestAnimationFrame(() => display.classList.add('pulse'));
+    }
+  });
+  display.addEventListener('animationend', () => display.classList.remove('pulse'));
+
+  // ---- Custom cursor (mouse only) ----
+  if (window.matchMedia('(pointer: fine)').matches) {
+    const dot = document.getElementById('cursorDot');
+    const ring = document.getElementById('cursorRing');
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let ringX = mouseX;
+    let ringY = mouseY;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+    });
+
+    function animateRing(){
+      ringX += (mouseX - ringX) * 0.18;
+      ringY += (mouseY - ringY) * 0.18;
+      ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    document.querySelectorAll('.buttons button').forEach((btn) => {
+      btn.addEventListener('mouseenter', () => {
+        ring.classList.add('is-active');
+        dot.classList.add('is-hidden');
+      });
+      btn.addEventListener('mouseleave', () => {
+        ring.classList.remove('is-active');
+        dot.classList.remove('is-hidden');
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
